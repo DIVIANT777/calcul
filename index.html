@@ -1,1066 +1,143 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Калькулятор дохода врача</title>
-  <meta name="description" content="Простой калькулятор дохода врача частной клиники: услуги, длительность, цена, перерывы, график, неявки." />
-  <style>
-    :root{
-      --bg:#0b1220;
-      --card:#0f1a2e;
-      --muted:#8ea0c3;
-      --text:#eaf0ff;
-      --line:rgba(255,255,255,.08);
-      --accent:#7c5cff;
-      --accent2:#22c55e;
-      --danger:#ef4444;
-      --warn:#f59e0b;
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-      --radius: 18px;
-    }
-
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue";
-      background: radial-gradient(1200px 600px at 15% 10%, rgba(124,92,255,.25), transparent 55%),
-                  radial-gradient(900px 500px at 80% 30%, rgba(34,197,94,.18), transparent 60%),
-                  radial-gradient(900px 500px at 70% 90%, rgba(245,158,11,.10), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      padding: 28px 16px 40px;
-    }
-
-    .wrap{max-width:1100px;margin:0 auto;}
-
-    header{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-bottom:18px;
-    }
-
-    .title{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    h1{
-      margin:0;
-      font-size: clamp(22px, 3vw, 34px);
-      line-height:1.1;
-      letter-spacing:-.02em;
-    }
-
-    .subtitle{
-      margin:0;
-      color:var(--muted);
-      font-size: 14px;
-      max-width: 860px;
-    }
-
-    .pill{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding:10px 12px;
-      border-radius:999px;
-      background: rgba(255,255,255,.06);
-      border:1px solid var(--line);
-      color: var(--muted);
-      font-size: 13px;
-      user-select:none;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap: 16px;
-    }
-
-    @media (max-width: 980px){
-      .grid{grid-template-columns: 1fr;}
-    }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-
-    .card .hd{
-      padding: 16px 16px 12px;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .card .hd h2{
-      margin:0;
-      font-size: 15px;
-      letter-spacing:-.01em;
-    }
-
-    .card .bd{padding:16px;}
-
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    @media (max-width: 640px){
-      .row{grid-template-columns: 1fr;}
-    }
-
-    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
-
-    input, select{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(0,0,0,.22);
-      color: var(--text);
-      outline:none;
-      font-size: 14px;
-    }
-
-    input:focus, select:focus{border-color: rgba(124,92,255,.7); box-shadow: 0 0 0 4px rgba(124,92,255,.15)}
-
-    .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
-
-    .btns{display:flex;gap:10px;flex-wrap:wrap}
-
-    button{
-      border:none;
-      border-radius: 14px;
-      padding: 11px 14px;
-      cursor:pointer;
-      font-weight: 650;
-      letter-spacing: .01em;
-      transition: transform .06s ease, opacity .2s ease;
-      color: var(--text);
-      background: rgba(255,255,255,.07);
-      border:1px solid var(--line);
-    }
-
-    button:hover{transform: translateY(-1px)}
-    button:active{transform: translateY(0px); opacity:.85}
-
-    .primary{background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(124,92,255,.65)); border-color: rgba(124,92,255,.55)}
-    .good{background: linear-gradient(135deg, rgba(34,197,94,.95), rgba(34,197,94,.55)); border-color: rgba(34,197,94,.55)}
-    .danger{background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(239,68,68,.55)); border-color: rgba(239,68,68,.55)}
-
-    table{
-      width:100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      overflow:hidden;
-      border-radius: 16px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-    }
-
-    thead th{
-      text-align:left;
-      font-size:12px;
-      color: var(--muted);
-      font-weight:600;
-      padding: 10px 10px;
-      border-bottom:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-    }
-
-    tbody td{
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      vertical-align: middle;
-    }
-
-    tbody tr:last-child td{border-bottom:none}
-
-    .svc-name{min-width:160px}
-
-    .tiny{
-      padding: 10px 10px;
-      border-radius: 12px;
-      font-size: 13px;
-    }
-
-    .del{
-      width: 42px;
-      padding: 10px 0;
-      text-align:center;
-      border-radius: 12px;
-      background: rgba(239,68,68,.10);
-      border:1px solid rgba(239,68,68,.25);
-    }
-
-    .del:hover{background: rgba(239,68,68,.18)}
-
-    .kpis{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    @media (max-width: 520px){
-      .kpis{grid-template-columns: 1fr;}
-    }
-
-    .kpi{
-      padding: 14px;
-      border-radius: 18px;
-      border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
-    }
-
-    .kpi .k{font-size:12px;color:var(--muted);margin-bottom:8px}
-    .kpi .v{font-size: 22px;font-weight:800;letter-spacing:-.02em}
-    .kpi .s{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
-
-    .hr{height:1px;background: var(--line); margin: 14px 0}
-
-    .footer{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .toast{
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.65);
-      border: 1px solid rgba(255,255,255,.14);
-      padding: 10px 12px;
-      border-radius: 999px;
-      color: var(--text);
-      font-size: 13px;
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .25s ease;
-      max-width: 92vw;
-      text-align:center;
-    }
-
-    .toast.show{opacity:1}
-
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-
-    .badge{
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .right-tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-
-    /* Мобильная адаптация для таблицы услуг */
-    @media (max-width: 640px) {
-      .services-table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        white-space: nowrap;
-      }
-
-      .services-table-wrapper table {
-        display: inline-block;
-        min-width: 600px; /* Минимальная ширина для скролла */
-      }
-
-      td:nth-child(2) { width: 15%; }
-      td:nth-child(2) input[data-k="duration"] {
-        font-size: 13px;
-        padding: 8px 6px;
-        min-width: 50px;
-        text-align: center;
-      }
-
-      td:nth-child(4) { width: 25%; }
-      td:nth-child(4) input[data-k="share"] {
-        font-size: 14px;
-        padding: 10px 8px;
-      }
-
-      td:nth-child(5) { width: 10%; }
-
-      td:nth-child(3) input[data-k="price"] {
-        font-size: 16px;
-        padding: 14px 12px;
-        min-width: 110px;
-      }
-
-      td:nth-child(3) { width: 35%; }
-    }
-
-    /* Мобильная адаптация для таблицы расходов */
-    @media (max-width: 640px) {
-      .expenses-table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        white-space: nowrap;
-      }
-
-      .expenses-table-wrapper table {
-        display: inline-block;
-        min-width: 400px;
-      }
-
-      td.exp-duration { width: 60%; }
-
-      td.exp-amount { width: 30%; }
-
-      td.exp-del { width: 10%; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор дохода врача PRO</title>
+<style>
+body {font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:20px;}
+.container {max-width:1100px; margin:auto; background:#fff; padding:20px; border-radius:14px; box-shadow:0 5px 25px rgba(0,0,0,0.08);}
+h1 {text-align:center;}
+.section {margin-bottom:25px;}
+input, button {padding:8px; margin:4px 0; border-radius:8px; border:1px solid #ccc;}
+button {cursor:pointer; background:#2e7d32; color:white; border:none;}
+button:hover {opacity:0.9;}
+.service, .expense {background:#f9fafc; padding:10px; border-radius:10px; margin-bottom:10px;}
+.result {background:#e8f5e9; padding:15px; border-radius:12px; font-size:18px;}
+label {font-size:14px;}
+.row {display:flex; gap:10px; flex-wrap:wrap;}
+.small {width:120px;}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="title">
-        <div>
-          <h1>Калькулятор дохода врача</h1>
-          <p class="subtitle">
-            Введите график + услуги. Калькулятор посчитает: <b>сколько пациентов помещается</b>, <b>средний чек</b>, <b>доход в день</b> и <b>доход в месяц</b> с учётом пустых окон.
-          </p>
-        </div>
-        <div class="right-tools">
-          <span class="badge">⚡ Работает офлайн</span>
-          <span class="badge">🔒 Без регистрации</span>
-          <span class="badge">📱 Для Reels/Stories</span>
-        </div>
-      </div>
-      <div class="pill">💡 Подсказка: добавьте 2–4 услуги и укажите долю пациентов по каждой — так получится честный средний чек.</div>
-    </header>
-
-    <div class="grid">
-      <!-- LEFT -->
-      <section class="card">
-        <div class="hd">
-          <h2>1) График работы</h2>
-          <div class="btns">
-            <button id="btnShare">Скопировать ссылку</button>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="row">
-            <div>
-              <label>Часов работы в день</label>
-              <input id="hoursPerDay" type="number" min="1" max="24" step="0.5" value="8" />
-            </div>
-            <div>
-              <label>Дней приёма в месяц</label>
-              <input id="daysPerMonth" type="number" min="1" max="31" step="1" value="22" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>Перерыв между пациентами (мин)</label>
-              <input id="breakMinutes" type="number" min="0" max="120" step="1" value="5" />
-            </div>
-            <div>
-              <label>Пустые окна / неявки (%)</label>
-              <input id="noShowPercent" type="number" min="0" max="80" step="1" value="10" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label>Процент клиники (%)</label>
-              <input id="clinicPercent" type="number" min="0" max="100" step="1" value="40" />
-            </div>
-            <div>
-              <label>Подсказка</label>
-              <input disabled value="Напр.: клиника забирает 40%" />
-            </div>
-          </div>
-
-          <div class="hr"></div>
-
-          <!-- Новый раздел: Иные расходы -->
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <h2 style="margin:0;font-size:15px">3) Иные расходы</h2>
-            <div class="btns">
-              <button class="good" id="btnAddExpense">+ Добавить расход</button>
-              <button class="danger" id="btnResetExpenses">Сбросить расходы</button>
-            </div>
-          </div>
-
-          <div style="margin-top:12px">
-            <div class="expenses-table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="exp-name">Категория</th>
-                    <th>Сумма (₽)</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="expensesBody"></tbody>
-              </table>
-            </div>
-            <div class="hint">
-              💡 Добавьте фиксированные расходы (аренда, реклама, налоги и т.д.) — они вычтутся из чистого дохода.
-            </div>
-          </div>
-
-          <div class="hr"></div>
-
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <h2 style="margin:0;font-size:15px">2) Услуги</h2>
-            <div class="btns">
-              <button class="good" id="btnAdd">+ Добавить услугу</button>
-              <button class="danger" id="btnReset">Сбросить</button>
-            </div>
-          </div>
-
-          <div style="margin-top:12px">
-            <div class="services-table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="svc-name">Услуга</th>
-                    <th>Длительность (мин)</th>
-                    <th>Цена (₽)</th>
-                    <th>Доля пациентов (%)</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="servicesBody"></tbody>
-              </table>
-            </div>
-            <div class="hint">
-              ⚠️ Доля пациентов должна суммарно быть около <b>100%</b>. Если будет меньше или больше — калькулятор всё равно посчитает, но покажет предупреждение.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT -->
-      <aside class="card">
-        <div class="hd">
-          <h2>Результат</h2>
-          <div class="btns">
-            <button id="btnCopy">Скопировать результат</button>
-          </div>
-        </div>
-        <div class="bd">
-          <div class="kpis">
-            <div class="kpi">
-              <div class="k">Пациентов в день (план)</div>
-              <div class="v" id="kpiPatientsDay">—</div>
-              <div class="s" id="kpiPatientsDayS">С учётом среднего времени приёма + перерыва.</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Средний чек</div>
-              <div class="v" id="kpiAvgCheck">—</div>
-              <div class="s">Считается по доле пациентов в услугах.</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Доход в день</div>
-              <div class="v" id="kpiDayIncome">—</div>
-              <div class="s">До корректировки на неявки.</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Доход в месяц</div>
-              <div class="v" id="kpiMonthIncome">—</div>
-              <div class="s" id="kpiMonthIncomeS">С учётом дней в месяц и пустых окон.</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Иные расходы в месяц</div>
-              <div class="v" id="kpiExpenses">—</div>
-              <div class="s" id="kpiExpensesS">Сумма всех добавленных расходов.</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Чистый доход врача</div>
-              <div class="v" id="kpiNetIncome">—</div>
-              <div class="s" id="kpiNetIncomeS">После вычета процента клиники и иных расходов.</div>
-            </div>
-          </div>
-
-          <div class="hr"></div>
-
-          <div class="kpi">
-            <div class="k">Итоговая формула</div>
-            <div class="s mono" id="formula">—</div>
-          </div>
-
-          <div class="hr"></div>
-
-          <div class="kpi" style="padding:16px">
-            <div class="k" style="margin-bottom:10px">Консультация с маркетологом по стратегии роста</div>
-            <div class="s" style="margin-bottom:12px">Оставьте контакты — пришлю разбор и план продвижения под вашу специальность.</div>
-            <button class="primary" id="btnOpenConsult" style="width:100%">Оставить заявку</button>
-          </div>
-
-          <div class="footer">
-            <b>Важно:</b> расчёты ориентировочные и зависят от спроса, сезона, политики клиники и вашей конверсии в запись.
-          </div>
-        </div>
-      </aside>
-    </div>
-
-    <div class="toast" id="toast">Готово</div>
-
-  <!-- MODAL -->
-  <div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.55);backdrop-filter: blur(6px);">
-    <div style="width:min(720px, 96vw);background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden;">
-      <div style="padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div>
-          <div style="font-weight:800;letter-spacing:-.02em">Заявка на консультацию</div>
-          <div style="color:rgba(234,240,255,.7);font-size:13px;margin-top:4px">Заполните 4 поля — я свяжусь с вами в удобное время.</div>
-        </div>
-        <button id="btnCloseModal" style="width:44px;height:44px;border-radius:14px">✕</button>
-      </div>
-
-      <div style="padding:16px">
-        <div class="row">
-          <div>
-            <label>ФИО</label>
-            <input id="fName" placeholder="Иванов Иван Иванович" />
-          </div>
-          <div>
-            <label>Номер телефона</label>
-            <input id="fPhone" placeholder="+7 (999) 123-45-67" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label>Специальность</label>
-            <input id="fSpec" placeholder="Напр.: стоматолог, дерматолог…" />
-          </div>
-          <div>
-            <label>Предпочтительное время консультации</label>
-            <input id="fTime" placeholder="Напр.: сегодня после 18:00" />
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;justify-content:space-between">
-          <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;user-select:none;margin:0">
-            <input id="fConsent" type="checkbox" style="width:18px;height:18px;margin-top:2px" />
-            <span style="font-size:13px;color:rgba(234,240,255,.8);line-height:1.35">
-              Даю согласие на обработку персональных данных.
-              <a id="consentLink" href="#" style="color:rgba(124,92,255,.95);text-decoration:none">Открыть текст согласия</a>
-            </span>
-          </label>
-          <span class="badge">🔒 Данные уходят в Google Таблицу</span>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-          <button id="btnSend" class="good" style="flex:1">Отправить</button>
-          <button id="btnCancel" style="flex:1">Отмена</button>
-        </div>
-
-        <div class="hint" id="sendHint" style="margin-top:10px"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONSENT TEXT (you can paste your policy) -->
-  <dialog id="consentDialog" style="width:min(820px,96vw);border:none;border-radius:22px;background:rgba(15,26,46,.98);color:var(--text);box-shadow:0 30px 90px rgba(0,0,0,.6);padding:0;">
-    <div style="padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div style="font-weight:800;letter-spacing:-.02em">Согласие на обработку персональных данных</div>
-      <button id="btnCloseConsent" style="width:44px;height:44px;border-radius:14px">✕</button>
-    </div>
-    <div style="padding:16px;max-height:min(60vh,520px);overflow:auto">
-      <div class="s" style="color:rgba(234,240,255,.8);line-height:1.55;font-size:13px">
-        <p><b>СОГЛАСИЕ НА ОБРАБОТКУ ПЕРСОНАЛЬНЫХ ДАННЫХ ВРАЧА.</b> 
-
-пользователя сайта на обработку персональных данных
-
-Настоящим свободно, своей волей и в своем интересе даю согласие Индивидуальному предпринимателю Инжиеву Нурадину
-Абдулмуталлимовичу ИНН 056009913520.;
-проживающий по адресу 367014, РОССИЯ, РЕСПУБЛИКА ДАГЕСТАН, Г МАХАЧКАЛА, УЛ АКУШИНСКОГО, Д 94, КВ 115, (далее – Оператор) на автоматизированную и
-неавтоматизированную обработку своих персональных данных в соответствии со следующим
-перечнем:
-● Фамилия, имя, отчество;
-● Номер телефона;
-● Ваша специальность;
-● Адрес электронной почты;
-● Стаж работы;
-● Количество принимаемых пациентов;
-● метаданные пользователя сайта (идентификатор пользователя, хранимый в cookie,
-данные об IP-адресе и местоположении, параметры сессии, данные о времени
-посещения;
-● сведения аккаунта пользователя в социальных сетях и мессенджерах, в том числе при
-подключении к чат-ботам в Telegram, Vk, Viber, WhatsApp;
-● иные индивидуальные средства коммуникации, указанные при заполнении на сайте
-любых форм обратной связи
-● источник захода на сайт и информация поискового или рекламного запроса, данные,
-характеризующие аудиторные сегменты;
-● параметры сессии;
-и иные индивидуальные средства коммуникации, указанные при заполнении на сайте
-http://blognuradiv.tilda.ws/besplatno (далее – Сайт) форм обратной связи на сайте, использовании сервисов
-регистрации на сайте;
-для целей оказания информационных услуг осуществления обратной связи с
-пользователем сайта, осуществление онлайн обучения, заключение договорных отношений,
-ведение рекламных кампаний, ведение графика обучения, рассылка рекламных материалов,
-участие в маркетинговых исследованиях
-Также даю свое согласие на предоставление Оператором моих персональных данных
-третьим лицам и на осуществление трансграничной передачи персональных данных для
-достижения заявленных целей обработки персональных данных.
-В целях обеспечения реализации требований законодательства в области обработки
-персональных данных Оператор может:
-осуществлять обработку персональных данных путем сбора, хранения, систематизации,
-накопления, изменения, уточнения, использования, распространения, обезличивания,
-блокирования, уничтожения персональных данных;
-использовать автоматизированный способ обработки персональных данных с передачей
-по сети Интернет, трансграничную передачу персональных данных;
-Настоящее согласие вступает в силу с момента подтверждения и действует в течение 5 лет.
-
-Отзыв согласия на обработку персональных данных осуществляется путем направления
-заявления в письменной форме на юридический адрес Оператора либо на адрес электронной
-почты: doktorinstagram@yandex.ru
-
-Я подтверждаю, что мне известно о праве отозвать свое согласие посредством
-составления соответствующего письменного документа, который может быть направлен мной в
-адрес Оператора.
-В случае моего отзыва согласия на обработку персональных данных Оператор вправе
-продолжить обработку персональных данных без моего согласия
-
-
-</p>
-        <p>Я, субъект персональных данных, даю согласие на обработку моих персональных данных (ФИО, телефон, специальность, предпочтительное время связи) в целях связи и предоставления консультации по маркетинговой стратегии.</p>
-        <p>Согласие может быть отозвано мной в любой момент путём обращения по контактам владельца формы.</p>
-      </div>
-    </div>
-  </dialog>
-  </div>
-
-  <script>
-    const $ = (id) => document.getElementById(id);
-
-    const defaults = {
-      hoursPerDay: 8,
-      daysPerMonth: 22,
-      breakMinutes: 5,
-      noShowPercent: 10,
-      clinicPercent: 40,
-      services: [
-        { name: "Консультация первичная", duration: 30, price: 3000, share: 50 },
-        { name: "Консультация повторная", duration: 20, price: 2500, share: 35 },
-        { name: "Процедура / манипуляция", duration: 40, price: 6000, share: 15 },
-      ],
-      expenses: [
-        { category: "Аренда кабинета", amount: 20000 },
-        { category: "Реклама", amount: 5000 },
-      ]
-    };
-
-    function fmtRub(n){
-      if(!isFinite(n)) return "—";
-      return Math.round(n).toLocaleString('ru-RU') + " ₽";
-    }
-
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(()=>t.classList.remove("show"), 1800);
-    }
-
-    function getState(){
-      const services = [...document.querySelectorAll("tr[data-service]")].map(tr => {
-        const name = tr.querySelector("input[data-k='name']").value.trim();
-        const duration = parseFloat(tr.querySelector("input[data-k='duration']").value || 0);
-        const price = parseFloat(tr.querySelector("input[data-k='price']").value || 0);
-        const share = parseFloat(tr.querySelector("input[data-k='share']").value || 0);
-        return { name, duration, price, share };
-      });
-
-      const expenses = [...document.querySelectorAll("tr[data-expense]")].map(tr => {
-        const category = tr.querySelector("input[data-k='category']").value.trim();
-        const amount = parseFloat(tr.querySelector("input[data-k='amount']").value || 0);
-        return { category, amount };
-      });
-
-      return {
-        hoursPerDay: parseFloat($("hoursPerDay").value || 0),
-        daysPerMonth: parseFloat($("daysPerMonth").value || 0),
-        breakMinutes: parseFloat($("breakMinutes").value || 0),
-        noShowPercent: parseFloat($("noShowPercent").value || 0),
-        clinicPercent: parseFloat($("clinicPercent").value || 0),
-        services,
-        expenses
-      };
-    }
-
-    function setState(state){
-      $("hoursPerDay").value = state.hoursPerDay;
-      $("daysPerMonth").value = state.daysPerMonth;
-      $("breakMinutes").value = state.breakMinutes;
-      $("noShowPercent").value = state.noShowPercent;
-      $("clinicPercent").value = state.clinicPercent ?? defaults.clinicPercent;
-
-      $("servicesBody").innerHTML = "";
-      state.services.forEach(addServiceRow);
-
-      $("expensesBody").innerHTML = "";
-      state.expenses.forEach(addExpenseRow);
-
-      calc();
-    }
-
-    function addServiceRow(svc = {name:"", duration:30, price:3000, share:0}){
-      const tr = document.createElement("tr");
-      tr.setAttribute("data-service", "1");
-
-      tr.innerHTML = `
-        <td class="svc-name"><input class="tiny" data-k="name" value="${escapeHtml(svc.name)}" placeholder="Напр. консультация"/></td>
-        <td><input class="tiny" data-k="duration" type="number" min="5" max="240" step="5" value="${svc.duration}"/></td>
-        <td><input class="tiny" data-k="price" type="number" min="0" step="100" value="${svc.price}"/></td>
-        <td><input class="tiny" data-k="share" type="number" min="0" max="100" step="1" value="${svc.share}"/></td>
-        <td style="width:56px"><button class="del" title="Удалить">✕</button></td>
-      `;
-
-      tr.querySelector(".del").addEventListener("click", ()=>{
-        tr.remove();
-        calc();
-      });
-
-      tr.querySelectorAll("input").forEach(inp => inp.addEventListener("input", calc));
-
-      $("servicesBody").appendChild(tr);
-    }
-
-    function addExpenseRow(exp = {category:"", amount:0}){
-      const tr = document.createElement("tr");
-      tr.setAttribute("data-expense", "1");
-
-      tr.innerHTML = `
-        <td class="exp-name"><input class="tiny" data-k="category" value="${escapeHtml(exp.category)}" placeholder="Напр. аренда"/></td>
-        <td class="exp-amount"><input class="tiny" data-k="amount" type="number" min="0" step="100" value="${exp.amount}"/></td>
-        <td style="width:56px"><button class="del" title="Удалить">✕</button></td>
-      `;
-
-      tr.querySelector(".del").addEventListener("click", ()=>{
-        tr.remove();
-        calc();
-      });
-
-      tr.querySelectorAll("input").forEach(inp => inp.addEventListener("input", calc));
-
-      $("expensesBody").appendChild(tr);
-    }
-
-    function escapeHtml(str){
-      return (str||"")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;");
-    }
-
-    function calc(){
-      const s = getState();
-
-      const workMinutes = Math.max(0, s.hoursPerDay * 60);
-
-      // Weighted average duration and avg check by shares
-      const totalShare = s.services.reduce((a,x)=>a + (isFinite(x.share)?x.share:0), 0);
-
-      const safeShareDiv = totalShare === 0 ? 1 : totalShare;
-
-      const avgDuration = s.services.reduce((a,x)=>{
-        const sh = (isFinite(x.share)?x.share:0) / safeShareDiv;
-        return a + (Math.max(0, x.duration) * sh);
-      }, 0);
-
-      const avgCheck = s.services.reduce((a,x)=>{
-        const sh = (isFinite(x.share)?x.share:0) / safeShareDiv;
-        return a + (Math.max(0, x.price) * sh);
-      }, 0);
-
-      const avgSlot = avgDuration + Math.max(0, s.breakMinutes);
-      const patientsPerDay = avgSlot > 0 ? (workMinutes / avgSlot) : 0;
-
-      const dayIncome = patientsPerDay * avgCheck;
-      const monthIncomeRaw = dayIncome * Math.max(0, s.daysPerMonth);
-
-      const noShow = Math.min(80, Math.max(0, s.noShowPercent)) / 100;
-      const monthIncome = monthIncomeRaw * (1 - noShow);
-
-      const clinicPct = Math.min(100, Math.max(0, s.clinicPercent)) / 100;
-      const incomeAfterClinic = monthIncome * (1 - clinicPct);
-
-      const totalExpenses = s.expenses.reduce((a, x) => a + Math.max(0, x.amount), 0);
-      const netIncome = Math.max(0, incomeAfterClinic - totalExpenses);
-
-      // Output
-      $("kpiPatientsDay").textContent = isFinite(patientsPerDay) ? (patientsPerDay.toFixed(1)) : "—";
-      $("kpiAvgCheck").textContent = fmtRub(avgCheck);
-      $("kpiDayIncome").textContent = fmtRub(dayIncome);
-      $("kpiMonthIncome").textContent = fmtRub(monthIncome);
-      $("kpiExpenses").textContent = fmtRub(totalExpenses);
-      $("kpiNetIncome").textContent = fmtRub(netIncome);
-
-      const warnShare = Math.abs(totalShare - 100) > 1;
-      $("kpiMonthIncomeS").innerHTML = warnShare
-        ? `⚠️ Доля услуг сейчас <b>${totalShare.toFixed(0)}%</b>. Лучше привести к 100%.`
-        : `Учтены пустые окна: <b>${Math.round(noShow*100)}%</b>.`;
-
-      $("kpiPatientsDayS").innerHTML = `Среднее время приёма: <b>${Math.round(avgDuration)} мин</b> + перерыв <b>${Math.round(s.breakMinutes)} мин</b>.`;
-
-      $("kpiNetIncomeS").innerHTML = `После вычета клиники <b>${Math.round(clinicPct*100)}%</b> и расходов <b>${fmtRub(totalExpenses)}</b>.`;
-
-      $("kpiExpensesS").innerHTML = `Всего расходов: <b>${s.expenses.length}</b> категорий.`;
-
-      $("formula").textContent = `(${s.hoursPerDay}ч × 60 / (${Math.round(avgDuration)} + ${Math.round(s.breakMinutes)})) × ${Math.round(avgCheck)} × ${s.daysPerMonth} × (1 − ${Math.round(noShow*100)}%) × (1 − ${Math.round(clinicPct*100)}%) − ${fmtRub(totalExpenses)}`;
-
-      // Persist
-      localStorage.setItem("docCalcState", JSON.stringify(s));
-
-      // Update URL
-      setUrlFromState(s);
-    }
-
-    function setUrlFromState(s){
-      const payload = {
-        h: s.hoursPerDay,
-        d: s.daysPerMonth,
-        b: s.breakMinutes,
-        n: s.noShowPercent,
-        c: s.clinicPercent,
-        s: s.services,
-        e: s.expenses
-      };
-
-      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload)));
-      const url = new URL(window.location.href);
-      url.searchParams.set("data", encoded);
-      history.replaceState(null, "", url);
-    }
-
-    function getStateFromUrl(){
-      const url = new URL(window.location.href);
-      const data = url.searchParams.get("data");
-      if(!data) return null;
-
-      try{
-        const json = decodeURIComponent(escape(atob(data)));
-        const payload = JSON.parse(json);
-        return {
-          hoursPerDay: payload.h ?? defaults.hoursPerDay,
-          daysPerMonth: payload.d ?? defaults.daysPerMonth,
-          breakMinutes: payload.b ?? defaults.breakMinutes,
-          noShowPercent: payload.n ?? defaults.noShowPercent,
-          clinicPercent: payload.c ?? defaults.clinicPercent,
-          services: Array.isArray(payload.s) ? payload.s : defaults.services,
-          expenses: Array.isArray(payload.e) ? payload.e : defaults.expenses
-        };
-      }catch(e){
-        return null;
-      }
-    }
-
-    function load(){
-      // Priority: URL -> localStorage -> defaults
-      const fromUrl = getStateFromUrl();
-      if(fromUrl){
-        setState(fromUrl);
-        return;
-      }
-
-      const saved = localStorage.getItem("docCalcState");
-      if(saved){
-        try{ setState(JSON.parse(saved)); return; }catch(e){}
-      }
-
-      setState(defaults);
-    }
-
-    function copy(text){
-      navigator.clipboard.writeText(text).then(()=>toast("Скопировано"));
-    }
-
-    // Events
-    ["hoursPerDay","daysPerMonth","breakMinutes","noShowPercent","clinicPercent"].forEach(id => {
-      $(id).addEventListener("input", calc);
-    });
-
-    $("btnAdd").addEventListener("click", ()=>{
-      addServiceRow({name:"Новая услуга", duration:30, price:3000, share:0});
-      calc();
-    });
-
-    $("btnReset").addEventListener("click", ()=>{
-      if(confirm("Сбросить все услуги?")){
-        $("servicesBody").innerHTML = "";
-        calc();
-        toast("Услуги сброшены");
-      }
-    });
-
-    $("btnAddExpense").addEventListener("click", ()=>{
-      addExpenseRow({category:"Новый расход", amount:0});
-      calc();
-    });
-
-    $("btnResetExpenses").addEventListener("click", ()=>{
-      if(confirm("Сбросить все расходы?")){
-        $("expensesBody").innerHTML = "";
-        calc();
-        toast("Расходы сброшены");
-      }
-    });
-
-    $("btnShare").addEventListener("click", ()=>{
-      copy(window.location.href);
-    });
-
-    $("btnCopy").addEventListener("click", ()=>{
-      const s = getState();
-      const patients = $("kpiPatientsDay").textContent;
-      const avg = $("kpiAvgCheck").textContent;
-      const day = $("kpiDayIncome").textContent;
-      const month = $("kpiMonthIncome").textContent;
-      const expenses = $("kpiExpenses").textContent;
-      const net = $("kpiNetIncome").textContent;
-
-      const text = `Калькулятор дохода врача
-
-Пациентов/день: ${patients}
-Средний чек: ${avg}
-Доход/день: ${day}
-Доход/месяц: ${month}
-Иные расходы: ${expenses}
-Чистый доход врача: ${net}
-
-Ссылка: ${window.location.href}`;
-      copy(text);
-    });
-
-    // Modal logic
-    const modal = $("modal");
-    const consentDialog = $("consentDialog");
-
-    function openModal(){
-      modal.style.display = "flex";
-      $("sendHint").textContent = "";
-      $("btnSend").disabled = false;
-    }
-
-    function closeModal(){
-      modal.style.display = "none";
-    }
-
-    $("btnOpenConsult").addEventListener("click", openModal);
-    $("btnCloseModal").addEventListener("click", closeModal);
-    $("btnCancel").addEventListener("click", closeModal);
-
-    modal.addEventListener("click", (e)=>{
-      if(e.target === modal) closeModal();
-    });
-
-    $("consentLink").addEventListener("click", (e)=>{
-      e.preventDefault();
-      consentDialog.showModal();
-    });
-
-    $("btnCloseConsent").addEventListener("click", ()=>consentDialog.close());
-
-    // Google Sheets (Apps Script WebApp URL) — нужно вставить сюда ваш URL
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxusE5ZzDwmnn8IkdhcFeRW67CLs6Tyid6VU08o292fzFrAw0Eu-nkKaqF8V3wFzhW4OQ/exec";
-
-    async function sendLead(){
-      const fio = $("fName").value.trim();
-      const phone = $("fPhone").value.trim();
-      const spec = $("fSpec").value.trim();
-      const time = $("fTime").value.trim();
-      const consent = $("fConsent").checked;
-
-      if(!fio || !phone || !spec || !time){
-        $("sendHint").textContent = "⚠️ Заполните все поля.";
-        return;
-      }
-      if(!consent){
-        $("sendHint").textContent = "⚠️ Нужно поставить галочку согласия.";
-        return;
-      }
-      if(!GOOGLE_SCRIPT_URL){
-        $("sendHint").textContent = "⚠️ Не настроен URL для отправки в Google Sheets (Apps Script).";
-        return;
-      }
-
-      const calcState = getState();
-      const payload = {
-        fio, phone, spec, time,
-        createdAt: new Date().toISOString(),
-        calc: {
-          hoursPerDay: calcState.hoursPerDay,
-          daysPerMonth: calcState.daysPerMonth,
-          breakMinutes: calcState.breakMinutes,
-          noShowPercent: calcState.noShowPercent,
-          clinicPercent: calcState.clinicPercent,
-          services: calcState.services,
-          kpis: {
-            patientsPerDay: $("kpiPatientsDay").textContent,
-            avgCheck: $("kpiAvgCheck").textContent,
-            dayIncome: $("kpiDayIncome").textContent,
-            monthIncome: $("kpiMonthIncome").textContent,
-            netIncome: $("kpiNetIncome").textContent,
-          },
-          url: window.location.href
-        }
-      };
-
-      try{
-        $("btnSend").disabled = true;
-        $("sendHint").textContent = "Отправляю…";
-
-        // send as JSON
-const formData = new FormData();
-formData.append("payload", JSON.stringify(payload));
-
-await fetch(GOOGLE_SCRIPT_URL, {
-  method: "POST",
-  body: formData
+<div class="container">
+<h1>Калькулятор дохода врача PRO</h1>
+
+<div class="section">
+<h3>Рабочее время</h3>
+<div class="row">
+<input type="number" id="hours" placeholder="Часов в день">
+<input type="number" id="days" placeholder="Дней в месяц">
+<input type="number" id="breakTime" placeholder="Перерыв (мин/день)">
+</div>
+</div>
+
+<div class="section">
+<h3>Услуги</h3>
+<div id="services"></div>
+<button onclick="addService()">+ Добавить услугу</button>
+</div>
+
+<div class="section">
+<h3>Расходы</h3>
+<div id="expenses"></div>
+<button onclick="addExpense()">+ Добавить расход</button>
+</div>
+
+<div class="section result">
+<div>Валовый доход: <span id="gross">0</span> ₽</div>
+<div>Доход врача (после % клиники): <span id="netDoctor">0</span> ₽</div>
+<div>Расходы: <span id="totalExpenses">0</span> ₽</div>
+<div><strong>Чистый доход: <span id="finalIncome">0</span> ₽</strong></div>
+</div>
+
+</div>
+
+<script>
+
+function addService(name="", duration="", price="", clinicPercent="50"){
+const div = document.createElement("div");
+div.className = "service";
+div.innerHTML = `
+<div class="row">
+<input placeholder="Название" value="${name}">
+<input type="number" class="small" placeholder="Длительность (мин)" value="${duration}">
+<input type="number" class="small" placeholder="Цена" value="${price}">
+<input type="number" class="small clinicPercent" placeholder="% клиники" value="${clinicPercent}">
+<button onclick="this.parentElement.parentElement.remove(); calculate()">Удалить</button>
+</div>
+`;
+document.getElementById("services").appendChild(div);
+attachEvents(div);
+}
+
+function addExpense(category="", amount=""){
+const div = document.createElement("div");
+div.className = "expense";
+div.innerHTML = `
+<div class="row">
+<input placeholder="Категория" value="${category}">
+<input type="number" class="small expenseAmount" placeholder="Сумма" value="${amount}">
+<button onclick="this.parentElement.parentElement.remove(); calculate()">Удалить</button>
+</div>
+`;
+document.getElementById("expenses").appendChild(div);
+attachEvents(div);
+}
+
+function attachEvents(element){
+element.querySelectorAll("input").forEach(input=>{
+input.addEventListener("input", calculate);
+});
+}
+
+document.querySelectorAll("input").forEach(input=>{
+input.addEventListener("input", calculate);
 });
 
+function calculate(){
+const hours = Number(document.getElementById("hours").value)||0;
+const days = Number(document.getElementById("days").value)||0;
+const breakTime = Number(document.getElementById("breakTime").value)||0;
 
-        // With no-cors we can't read response; assume ok
-        toast("Заявка отправлена");
-        closeModal();
+const totalMinutesPerDay = hours*60 - breakTime;
+const totalMinutesMonth = totalMinutesPerDay * days;
 
-        // clear
-        $("fName").value = "";
-        $("fPhone").value = "";
-        $("fSpec").value = "";
-        $("fTime").value = "";
-        $("fConsent").checked = false;
-      }catch(err){
-        $("btnSend").disabled = false;
-        $("sendHint").textContent = "Ошибка отправки. Попробуйте ещё раз.";
-      }
-    }
+let gross=0;
+let doctorIncome=0;
 
-    $("btnSend").addEventListener("click", sendLead);
+document.querySelectorAll(".service").forEach(service=>{
+const inputs = service.querySelectorAll("input");
+const duration = Number(inputs[1].value)||0;
+const price = Number(inputs[2].value)||0;
+const clinicPercent = Number(inputs[3].value)||0;
 
-    // Init
-    load();
-  </script>
+if(duration>0){
+const count = Math.floor(totalMinutesMonth / duration);
+const serviceGross = count * price;
+gross += serviceGross;
+
+const doctorShare = serviceGross * ((100 - clinicPercent)/100);
+doctorIncome += doctorShare;
+}
+});
+
+let totalExpenses=0;
+document.querySelectorAll(".expenseAmount").forEach(exp=>{
+totalExpenses += Number(exp.value)||0;
+});
+
+const finalIncome = doctorIncome - totalExpenses;
+
+document.getElementById("gross").innerText = gross.toLocaleString();
+document.getElementById("netDoctor").innerText = doctorIncome.toLocaleString();
+document.getElementById("totalExpenses").innerText = totalExpenses.toLocaleString();
+document.getElementById("finalIncome").innerText = finalIncome.toLocaleString();
+}
+
+addService();
+calculate();
+
+</script>
 </body>
 </html>
